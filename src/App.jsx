@@ -73,37 +73,36 @@ function App() {
     setEditOpen(false);
   };
 
-  const addUser = () => {
-    fetch("https://jsonplaceholder.typicode.com/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(add),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Sending Failed");
-        return res.json();
-      })
-      .then((newuser) => {
-        return setMapData((prev) => {
-          return [...prev, newuser];
-        });
-      })
-      .then(() => {
-        setAdd({
-          name: "",
-          email: "",
-          addressStreet: "",
-          addressCity: "",
-          phone: "",
-          website: "",
-          companyName: "",
-          companyCatchphrase: "",
-        });
-        setAddModalOpen(false);
-      })
-      .catch((err) => {
-        console.log(err);
+  const addUser = async () => {
+    try {
+      const response = await fetch(
+        "https://jsonplaceholder.typicode.com/users",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(add),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Sending Failed");
+      }
+      const newUserData = await response.json();
+      setMapData((prev) => [...prev, newUserData]);
+      setAdd({
+        name: "",
+        email: "",
+        addressStreet: "",
+        addressCity: "",
+        phone: "",
+        website: "",
+        companyName: "",
+        companyCatchphrase: "",
       });
+      setAddModalOpen(false);
+    } catch (error) {
+      console.log(error);
+      setAddModalOpen(false);
+    }
   };
   /* handle oks*/
 
@@ -127,26 +126,7 @@ function App() {
       })
       .then((data) => {
         setLoading(false);
-        setAllData(() => {
-          return data.map((data) => {
-            return data;
-          });
-        });
-        console.log(alldata);
-        setMapData(() => {
-          return data.map((data) => {
-            return {
-              name: data.name,
-              email: data.email,
-              addressStreet: data.address.street,
-              addressCity: data.address.city,
-              phone: data.phone,
-              website: data.website,
-              companyName: data.company.companyName,
-              companyCatchphrase: data.company.companyCatchphrase,
-            };
-          });
-        });
+        setAllData(data);
       })
       .catch((err) => {
         setError(err.message);
@@ -176,6 +156,19 @@ function App() {
   };
   // const handle changes
 
+  console.log(alldata);
+  const formattedData = alldata?.map((data) => {
+    return {
+      name: data.name,
+      email: data.email,
+      addressStreet: data.address.street,
+      addressCity: data.address.city,
+      phone: data.phone,
+      website: data.website,
+      companyName: data.company.companyName,
+      companyCatchphrase: data.company.companyCatchphrase,
+    };
+  });
   return (
     <>
       <div
@@ -341,7 +334,12 @@ function App() {
         </>
       </>
       <>
-        <Table dataSource={mapData} bordered size="large" loading={loading}>
+        <Table
+          dataSource={formattedData}
+          bordered
+          size="large"
+          loading={loading}
+        >
           <Column title="Name" key="name" dataIndex="name" />
           <Column title="Email" key="email" dataIndex="email" />
           <ColumnGroup title="Address">
